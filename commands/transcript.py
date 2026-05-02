@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
         media_path = download(
             args.url,
             args.output_dir,
-            audio_only=False,
+            audio_only=True,
             cookies_from_browser=args.cookies_from_browser,
         )
     else:

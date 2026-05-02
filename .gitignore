@@ -5,3 +5,5 @@ downloads/
 *.mp4
 *.srt
 *.txt
+.env
+*.mp4.*

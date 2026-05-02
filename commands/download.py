@@ -21,6 +21,9 @@ def download(
     opts: dict = {
         "outtmpl": str(output_dir / name_template),
         "noplaylist": True,
+        "extractor_args": {
+            "youtube": {"player_client": ["tv_simply", "mweb", "default"]}
+        },
     }
     if cookies_from_browser:
         opts["cookiesfrombrowser"] = (cookies_from_browser,)
