@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-from datetime import datetime
 from pathlib import Path
 
 from yt_dlp import YoutubeDL
@@ -11,10 +10,7 @@ from yt_dlp import YoutubeDL
 def download(url: str, output_dir: Path, audio_only: bool = False) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d%H%M")
-    name_template = (
-        f"{timestamp}_%(id)s_[%(channel|NA)s]_[%(title)s].%(ext)s"
-    )
+    name_template = "[%(channel|NA)s]_[%(title)s].%(ext)s"
     opts = {
         "outtmpl": str(output_dir / name_template),
         "noplaylist": True,

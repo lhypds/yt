@@ -28,7 +28,7 @@ def _format_timestamp(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
 
 
-def transcribe(media_path: Path, language: str, model_size: str) -> Path:
+def transcribe(media_path: Path, language: str, model_size: str) -> tuple[Path, Path]:
     print(f"==> Loading whisper model '{model_size}' (first run downloads ~hundreds of MB)")
     model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
@@ -40,12 +40,15 @@ def transcribe(media_path: Path, language: str, model_size: str) -> Path:
     )
 
     srt_path = media_path.with_suffix(".srt")
-    with srt_path.open("w", encoding="utf-8") as f:
+    txt_path = media_path.with_suffix(".txt")
+    with srt_path.open("w", encoding="utf-8") as srt, txt_path.open("w", encoding="utf-8") as txt:
         for index, seg in enumerate(segments, start=1):
-            f.write(f"{index}\n")
-            f.write(f"{_format_timestamp(seg.start)} --> {_format_timestamp(seg.end)}\n")
-            f.write(f"{seg.text.strip()}\n\n")
-    return srt_path
+            text = seg.text.strip()
+            srt.write(f"{index}\n")
+            srt.write(f"{_format_timestamp(seg.start)} --> {_format_timestamp(seg.end)}\n")
+            srt.write(f"{text}\n\n")
+            txt.write(f"{text}\n")
+    return srt_path, txt_path
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -74,8 +77,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     media_path = download(args.url, args.output_dir, audio_only=False)
-    srt_path = transcribe(media_path, args.lang, args.model)
+    srt_path, txt_path = transcribe(media_path, args.lang, args.model)
     print(f"==> Wrote {srt_path}")
+    print(f"==> Wrote {txt_path}")
     return 0
 
 
