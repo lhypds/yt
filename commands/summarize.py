@@ -13,13 +13,15 @@ from openai import OpenAI
 from commands.download import download
 from commands.transcript import SUPPORTED_LANGS, transcribe
 
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = "gpt-5.5"
 
 PROMPT = (
-    "You are summarizing the transcript of a video. "
-    "Read the transcript and produce a concise summary that lists the main "
-    "points of the video as a markdown bulleted list. Start with a one-line "
-    "overview, then the bullet points. Keep it faithful to the transcript."
+    "You are reading the transcript of a video. Extract the most "
+    "informational content — the specific facts, claims, numbers, names, "
+    "events, and conclusions a viewer would actually want to take away. "
+    "Skip filler, intros, sponsor reads, and rhetorical throat-clearing. "
+    "Write it as natural prose, not a bulleted list. Be faithful to the "
+    "transcript and do not invent details."
 )
 
 
