@@ -1,5 +1,7 @@
 """Download a YouTube video given its URL."""
 
+from __future__ import annotations
+
 import argparse
 import sys
 from pathlib import Path
@@ -7,14 +9,21 @@ from pathlib import Path
 from yt_dlp import YoutubeDL
 
 
-def download(url: str, output_dir: Path, audio_only: bool = False) -> Path:
+def download(
+    url: str,
+    output_dir: Path,
+    audio_only: bool = False,
+    cookies_from_browser: str | None = None,
+) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     name_template = "[%(channel|NA)s]_[%(title)s].%(ext)s"
-    opts = {
+    opts: dict = {
         "outtmpl": str(output_dir / name_template),
         "noplaylist": True,
     }
+    if cookies_from_browser:
+        opts["cookiesfrombrowser"] = (cookies_from_browser,)
 
     if audio_only:
         opts["format"] = "bestaudio/best"
@@ -39,7 +48,7 @@ def download(url: str, output_dir: Path, audio_only: bool = False) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Download a YouTube video.")
-    parser.add_argument("url", help="YouTube video URL")
+    parser.add_argument("-u", "--url", required=True, help="YouTube video URL")
     parser.add_argument(
         "-o",
         "--output-dir",
@@ -52,9 +61,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Download audio only (mp3) instead of video",
     )
+    parser.add_argument(
+        "--cookies-from-browser",
+        help="Browser to read cookies from (e.g. chrome, firefox, safari, brave, edge)",
+    )
     args = parser.parse_args(argv)
 
-    download(args.url, args.output_dir, audio_only=args.audio_only)
+    download(
+        args.url,
+        args.output_dir,
+        audio_only=args.audio_only,
+        cookies_from_browser=args.cookies_from_browser,
+    )
     return 0
 
 
