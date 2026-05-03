@@ -22,7 +22,8 @@ PROMPT = (
     "events, and conclusions a viewer would actually want to take away. "
     "Skip filler, intros, sponsor reads, and rhetorical throat-clearing. "
     "Write it as natural prose, not a bulleted list. Be faithful to the "
-    "transcript and do not invent details."
+    "transcript and do not invent details. "
+    "Then summarize and list out the most important points."
 )
 
 
