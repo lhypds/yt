@@ -6,6 +6,16 @@ yt
 Some tools for processing Youtube videos.  
 
 
+Setup
+-----
+
+`./setup.sh`  
+`./install.sh`  
+
+Uninstall
+`./uninstall.sh`  
+
+
 Commands
 --------
 
@@ -24,3 +34,6 @@ Copy `.env.example` to `.env` and set `OPENAI_API_KEY` first.
 `yt summarize -u [URL] --lang en` - Summarize a video from Youtube.  
 `yt summarize -f [FILE] --lang en` - Summarize a video file.  
 `yt summarize -f [FILE.txt]` - Summarize an existing transcript file.  
+
+Clear
+`./clear.sh`  

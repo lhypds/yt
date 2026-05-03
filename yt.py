@@ -1,34 +1,16 @@
-"""youtube-utils CLI dispatcher.
+"""Backward-compatible launcher: `python yt.py` from the repo root."""
 
-Usage: python yt.py <command> [args...]
+from __future__ import annotations
 
-Forwards all arguments after <command> to commands/<command>.py's main().
-"""
-
-import importlib
 import sys
 from pathlib import Path
 
+# Allow running without `pip install` when executed from the repository root.
+_root = Path(__file__).resolve().parent
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
 
-def main(argv: list[str]) -> int:
-    if len(argv) < 1 or argv[0] in ("-h", "--help"):
-        available = sorted(
-            p.stem
-            for p in (Path(__file__).parent / "commands").glob("*.py")
-            if not p.stem.startswith("_")
-        )
-        print(f"usage: yt <command> [args...]\n\ncommands: {', '.join(available)}")
-        return 0 if argv else 1
-
-    command, *rest = argv
-    try:
-        module = importlib.import_module(f"commands.{command}")
-    except ModuleNotFoundError:
-        print(f"yt: unknown command '{command}'", file=sys.stderr)
-        return 2
-
-    return module.main(rest)
-
+from yt.cli import main
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

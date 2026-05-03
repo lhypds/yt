@@ -13,7 +13,7 @@ from pathlib import Path
 from faster_whisper import WhisperModel
 from tqdm import tqdm
 
-from commands.download import download
+from .download import download
 
 SUPPORTED_LANGS = ("en", "zh", "ja")
 

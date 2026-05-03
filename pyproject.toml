@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt"
+version = "0.1.0"
+description = "CLI to download, transcribe, and summarize YouTube videos"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "yt-dlp>=2024.10.7",
+    "faster-whisper>=1.0.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["yt*"]

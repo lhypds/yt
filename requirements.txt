@@ -1,4 +1,6 @@
+# Runtime dependencies only (same as pyproject.toml [project.dependencies]).
 yt-dlp>=2024.10.7
 faster-whisper>=1.0.0
 openai>=1.0.0
 python-dotenv>=1.0.0
+tqdm>=4.0.0

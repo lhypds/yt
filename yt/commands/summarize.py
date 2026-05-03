@@ -10,8 +10,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from commands.download import download
-from commands.transcript import SUPPORTED_LANGS, transcribe
+from .download import download
+from .transcript import SUPPORTED_LANGS, transcribe
 
 DEFAULT_MODEL = "gpt-5.5"
 

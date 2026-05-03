@@ -1,21 +1,32 @@
 #!/usr/bin/env bash
-# Set up the youtube-utils environment: creates .venv and installs requirements.
+# Preparation for ./install.sh: create .venv with Python >= 3.11, upgrade pip, check ffmpeg.
+# Does not install project dependencies or the global yt command — run ./install.sh after this.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-PYTHON="${PYTHON:-python3}"
 VENV_DIR=".venv"
 
-if ! command -v "$PYTHON" >/dev/null 2>&1; then
-    echo "error: $PYTHON not found on PATH" >&2
+PY=""
+for cmd in "${PYTHON:-}" python3.13 python3.12 python3.11 python3; do
+    [ -z "$cmd" ] && continue
+    command -v "$cmd" >/dev/null 2>&1 || continue
+    if "$cmd" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
+        PY="$cmd"
+        break
+    fi
+done
+
+if [ -z "$PY" ]; then
+    echo "error: need Python >= 3.11 for this project." >&2
+    echo "  PYTHON=/opt/homebrew/bin/python3.12 ./setup.sh" >&2
     exit 1
 fi
 
 if [ ! -d "$VENV_DIR" ]; then
-    echo "==> Creating virtualenv at $VENV_DIR"
-    "$PYTHON" -m venv "$VENV_DIR"
+    echo "==> Creating virtualenv at $VENV_DIR ($PY)"
+    "$PY" -m venv "$VENV_DIR"
 else
     echo "==> Reusing existing virtualenv at $VENV_DIR"
 fi
@@ -25,9 +36,6 @@ source "$VENV_DIR/bin/activate"
 
 echo "==> Upgrading pip"
 pip install --upgrade pip
-
-echo "==> Installing requirements"
-pip install -r requirements.txt
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
     cat >&2 <<'EOF'
@@ -42,11 +50,11 @@ fi
 
 cat <<EOF
 
-Setup complete.
+Setup complete — ready for ./install.sh
 
-Activate the venv with:
+Next step (installs Python deps + global \`yt\` command):
+    ./install.sh
+
+Optional: activate the venv only (no global \`yt\` yet):
     source $VENV_DIR/bin/activate
-
-Or run the downloader directly:
-    $VENV_DIR/bin/python video-download/download.py "<youtube-url>"
 EOF
