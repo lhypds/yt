@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -116,6 +117,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"==> Wrote {summary_path}")
     print()
     print(summary)
+
+    opener = "open" if sys.platform == "darwin" else "xdg-open"
+    subprocess.run([opener, str(summary_path)], check=False)
     return 0
 
 
