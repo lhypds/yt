@@ -89,8 +89,6 @@ def main(argv: list[str] | None = None) -> int:
             parser.error(f"file not found: {args.file}")
         txt_path = args.file
     else:
-        if args.lang is None:
-            parser.error("--lang is required when transcribing audio/video")
         if args.url:
             media_path = download(
                 args.url,
@@ -102,7 +100,13 @@ def main(argv: list[str] | None = None) -> int:
             if not args.file.is_file():
                 parser.error(f"file not found: {args.file}")
             media_path = args.file
-        _, txt_path = transcribe(media_path, args.lang, args.whisper_model)
+        txt_path = media_path.with_suffix(".txt")
+        if txt_path.is_file():
+            print(f"==> Reusing existing transcript {txt_path}")
+        else:
+            if args.lang is None:
+                parser.error("--lang is required when transcribing audio/video")
+            _, txt_path = transcribe(media_path, args.lang, args.whisper_model)
 
     transcript_text = txt_path.read_text(encoding="utf-8").strip()
     if not transcript_text:
