@@ -16,4 +16,9 @@ while IFS= read -r -d '' dir; do
     rm -rf "$dir"
 done < <(find . -type d -name "__pycache__" ! -path "./.venv/*" ! -path "./.git/*" -print0)
 
+echo "==> Removing .srt, .mp3, .mp4, .txt, .md files (except README.md, requirements.txt, .venv, .git)"
+while IFS= read -r -d '' file; do
+    rm -f "$file"
+done < <(find . -type f \( -name "*.srt" -o -name "*.mp3" -o -name "*.mp4" -o -name "*.txt" -o -name "*.md" \) ! -path "./.venv/*" ! -path "./.git/*" ! -name "README.md" ! -name "requirements.txt" -print0)
+
 echo "Clear complete."
