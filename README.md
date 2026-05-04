@@ -12,7 +12,7 @@ Setup
 `./setup.sh`  
 `./install.sh`  
 
-Uninstall
+Uninstall  
 `./uninstall.sh`  
 
 
