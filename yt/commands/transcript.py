@@ -13,6 +13,7 @@ from pathlib import Path
 from faster_whisper import WhisperModel
 from tqdm import tqdm
 
+from ..utils.cacheUtils import CACHE_DIR, reset_cache_dir
 from .download import download
 
 SUPPORTED_LANGS = ("en", "zh", "ja")
@@ -31,7 +32,12 @@ def _format_timestamp(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
 
 
-def transcribe(media_path: Path, language: str, model_size: str) -> tuple[Path, Path]:
+def transcribe(
+    media_path: Path,
+    language: str,
+    model_size: str,
+    output_dir: Path = CACHE_DIR,
+) -> tuple[Path, Path]:
     print(f"==> Loading whisper model '{model_size}' (first run downloads ~hundreds of MB)")
     model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
@@ -42,8 +48,9 @@ def transcribe(media_path: Path, language: str, model_size: str) -> tuple[Path, 
         vad_filter=True,
     )
 
-    srt_path = media_path.with_suffix(".srt")
-    txt_path = media_path.with_suffix(".txt")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    srt_path = output_dir / f"{media_path.stem}.srt"
+    txt_path = output_dir / f"{media_path.stem}.txt"
     total = float(getattr(info, "duration", 0) or 0)
     bar = tqdm(
         total=round(total, 2) if total else None,
@@ -82,8 +89,8 @@ def main(argv: list[str] | None = None) -> int:
         "-o",
         "--output-dir",
         type=Path,
-        default=Path.cwd(),
-        help="Directory to save the video and SRT into (default: current directory)",
+        default=CACHE_DIR,
+        help=f"Directory to save the video and SRT into (default: {CACHE_DIR})",
     )
     parser.add_argument(
         "--model",
@@ -96,6 +103,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    # Validate any local input before clearing the cache, so a bad path doesn't
+    # cause us to nuke the cache for nothing.
+    if args.file and not args.file.is_file():
+        parser.error(f"file not found: {args.file}")
+
+    reset_cache_dir()
+
     if args.url:
         media_path = download(
             args.url,
@@ -104,10 +118,8 @@ def main(argv: list[str] | None = None) -> int:
             cookies_from_browser=args.cookies_from_browser,
         )
     else:
-        if not args.file.is_file():
-            parser.error(f"file not found: {args.file}")
         media_path = args.file
-    srt_path, txt_path = transcribe(media_path, args.lang, args.model)
+    srt_path, txt_path = transcribe(media_path, args.lang, args.model, args.output_dir)
     print(f"==> Wrote {srt_path}")
     print(f"==> Wrote {txt_path}")
     return 0

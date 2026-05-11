@@ -11,6 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from ..utils.cacheUtils import CACHE_DIR, reset_cache_dir
 from .download import download
 from .transcript import SUPPORTED_LANGS, transcribe
 
@@ -60,8 +61,8 @@ def main(argv: list[str] | None = None) -> int:
         "-o",
         "--output-dir",
         type=Path,
-        default=Path.cwd(),
-        help="Directory to save downloads and outputs into (default: current directory)",
+        default=CACHE_DIR,
+        help=f"Directory to save downloads and outputs into (default: {CACHE_DIR})",
     )
     parser.add_argument(
         "--whisper-model",
@@ -85,10 +86,25 @@ def main(argv: list[str] | None = None) -> int:
             "OPENAI_API_KEY is not set. Copy .env.example to .env and add your key."
         )
 
+    # Resolve and (when needed) read inputs *before* clearing the cache, so an
+    # input that happens to live inside ~/.cache/yt isn't wiped out from under
+    # us when reset_cache_dir() runs.
+    preloaded_transcript: str | None = None
+    preloaded_stem: str | None = None
     if args.file and args.file.suffix.lower() == ".txt":
         if not args.file.is_file():
             parser.error(f"file not found: {args.file}")
-        txt_path = args.file
+        preloaded_transcript = args.file.read_text(encoding="utf-8")
+        preloaded_stem = args.file.stem
+    elif args.file is not None and not args.file.is_file():
+        parser.error(f"file not found: {args.file}")
+
+    reset_cache_dir()
+
+    if preloaded_transcript is not None:
+        txt_path = args.output_dir / f"{preloaded_stem}.txt"
+        txt_path.parent.mkdir(parents=True, exist_ok=True)
+        txt_path.write_text(preloaded_transcript, encoding="utf-8")
     else:
         if args.url:
             media_path = download(
@@ -98,16 +114,12 @@ def main(argv: list[str] | None = None) -> int:
                 cookies_from_browser=args.cookies_from_browser,
             )
         else:
-            if not args.file.is_file():
-                parser.error(f"file not found: {args.file}")
             media_path = args.file
-        txt_path = media_path.with_suffix(".txt")
-        if txt_path.is_file():
-            print(f"==> Reusing existing transcript {txt_path}")
-        else:
-            if args.lang is None:
-                parser.error("--lang is required when transcribing audio/video")
-            _, txt_path = transcribe(media_path, args.lang, args.whisper_model)
+        if args.lang is None:
+            parser.error("--lang is required when transcribing audio/video")
+        _, txt_path = transcribe(
+            media_path, args.lang, args.whisper_model, args.output_dir
+        )
 
     transcript_text = txt_path.read_text(encoding="utf-8").strip()
     if not transcript_text:
@@ -117,7 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"==> Summarizing {txt_path.name} with {args.openai_model}")
     summary = summarize_text(transcript_text, args.openai_model)
 
-    summary_path = txt_path.with_suffix(".summary.md")
+    summary_path = args.output_dir / f"{txt_path.stem}.summary.md"
     summary_path.write_text(summary + "\n", encoding="utf-8")
     print(f"==> Wrote {summary_path}")
     print()
