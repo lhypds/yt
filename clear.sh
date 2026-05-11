@@ -5,8 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-echo "==> Removing dist/, build/, and *.egg-info"
-rm -rf dist build
+echo "==> Removing dist/, build/, release/, and *.egg-info"
+rm -rf dist build release
 # Editable installs or local builds may leave these at the repo root.
 shopt -s nullglob
 rm -rf ./*.egg-info
