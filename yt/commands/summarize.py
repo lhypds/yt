@@ -13,7 +13,7 @@ from openai import OpenAI
 
 from ..utils.cacheUtils import CACHE_DIR, reset_cache_dir
 from .download import download
-from .transcript import SUPPORTED_LANGS, transcribe
+from .transcript import prompt_language, transcribe
 
 DEFAULT_MODEL = "gpt-5.5"
 
@@ -51,11 +51,6 @@ def main(argv: list[str] | None = None) -> int:
         "--file",
         type=Path,
         help="Path to a local media file or an existing .txt transcript",
-    )
-    parser.add_argument(
-        "--lang",
-        choices=SUPPORTED_LANGS,
-        help="Audio language (en, zh, or ja). Required unless --file points to a .txt",
     )
     parser.add_argument(
         "-o",
@@ -99,6 +94,12 @@ def main(argv: list[str] | None = None) -> int:
     elif args.file is not None and not args.file.is_file():
         parser.error(f"file not found: {args.file}")
 
+    # Prompt for language *before* clearing the cache so an aborted prompt
+    # doesn't wipe anything. Only needed when we're going to transcribe.
+    language: str | None = None
+    if preloaded_transcript is None:
+        language = prompt_language()
+
     reset_cache_dir()
 
     if preloaded_transcript is not None:
@@ -115,10 +116,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             media_path = args.file
-        if args.lang is None:
-            parser.error("--lang is required when transcribing audio/video")
         _, txt_path = transcribe(
-            media_path, args.lang, args.whisper_model, args.output_dir
+            media_path, language, args.whisper_model, args.output_dir
         )
 
     transcript_text = txt_path.read_text(encoding="utf-8").strip()

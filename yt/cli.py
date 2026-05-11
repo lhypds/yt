@@ -12,6 +12,37 @@ import sys
 from importlib.metadata import PackageNotFoundError, version as pkg_version
 from pathlib import Path
 
+# One-line description + sample invocations shown by `yt -h`. Keep examples
+# minimal — full per-command options are reachable via `yt <command> -h`.
+COMMAND_HELP: dict[str, tuple[str, tuple[str, ...]]] = {
+    "download": (
+        "Download a YouTube video.",
+        ("yt download -u <URL>",),
+    ),
+    "transcript": (
+        "Transcribe a YouTube video or local media file (prompts for language).",
+        (
+            "yt transcript -u <URL>",
+            "yt transcript -f <FILE>",
+        ),
+    ),
+    "summarize": (
+        "Summarize a video using OpenAI (prompts for language unless input is .txt).",
+        (
+            "yt summarize -u <URL>",
+            "yt summarize -f <FILE>",
+            "yt summarize -f <FILE.txt>",
+        ),
+    ),
+    "update": (
+        "Update yt to the latest release on GitHub (lhypds/yt).",
+        (
+            "yt update",
+            "yt update -f",
+        ),
+    ),
+}
+
 
 def _version_string() -> str:
     root = Path(__file__).resolve().parent.parent
@@ -24,22 +55,38 @@ def _version_string() -> str:
         return "0.0.0"
 
 
+def _print_help() -> None:
+    available = sorted(
+        p.stem
+        for p in (Path(__file__).resolve().parent / "commands").glob("*.py")
+        if not p.stem.startswith("_")
+    )
+    print("usage: yt <command> [args...]")
+    print("       yt -h | --help        Show this help.")
+    print("       yt -v | --version     Show the installed version.")
+    print()
+    print("commands:")
+    name_width = max((len(c) for c in available), default=0)
+    for cmd in available:
+        entry = COMMAND_HELP.get(cmd)
+        if entry is None:
+            print(f"  {cmd}")
+            continue
+        description, examples = entry
+        print(f"  {cmd:<{name_width}}  {description}")
+        for example in examples:
+            print(f"  {' ' * name_width}    {example}")
+    print()
+    print("Run `yt <command> -h` for the full options of a single command.")
+
+
 def main(argv: list[str]) -> int:
     if argv and argv[0] in ("-v", "--version"):
         print(_version_string())
         return 0
 
     if len(argv) < 1 or argv[0] in ("-h", "--help"):
-        available = sorted(
-            p.stem
-            for p in (Path(__file__).resolve().parent / "commands").glob("*.py")
-            if not p.stem.startswith("_")
-        )
-        print(
-            f"usage: yt <command> [args...]\n"
-            f"       yt -v | --version\n\n"
-            f"commands: {', '.join(available)}"
-        )
+        _print_help()
         return 0 if argv else 1
 
     command, *rest = argv

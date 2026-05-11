@@ -17,6 +17,43 @@ from ..utils.cacheUtils import CACHE_DIR, reset_cache_dir
 from .download import download
 
 SUPPORTED_LANGS = ("en", "zh", "ja")
+DEFAULT_LANG = "en"
+
+
+def prompt_language(default: str = DEFAULT_LANG) -> str:
+    """Interactively pick a language code from SUPPORTED_LANGS.
+
+    Accepts either the list number (1, 2, …) or the language code itself.
+    Pressing Enter chooses ``default``. Aborts with a clear error when stdin
+    is not a TTY, so scripted callers fail fast instead of hanging on input().
+    """
+    if not sys.stdin.isatty():
+        print(
+            "error: language selection requires an interactive terminal "
+            f"(supported: {', '.join(SUPPORTED_LANGS)})",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    print("Select language:")
+    for i, code in enumerate(SUPPORTED_LANGS, start=1):
+        marker = "  (default)" if code == default else ""
+        print(f"  {i}) {code}{marker}")
+    while True:
+        try:
+            choice = input(f"Choice [default: {default}]: ").strip().lower()
+        except EOFError:
+            print()
+            sys.exit(2)
+        if not choice:
+            return default
+        if choice in SUPPORTED_LANGS:
+            return choice
+        if choice.isdigit():
+            idx = int(choice) - 1
+            if 0 <= idx < len(SUPPORTED_LANGS):
+                return SUPPORTED_LANGS[idx]
+        print(f"  Invalid choice: {choice!r}. Try again.")
 
 
 def _format_timestamp(seconds: float) -> str:
@@ -80,12 +117,6 @@ def main(argv: list[str] | None = None) -> int:
     source.add_argument("-u", "--url", help="YouTube video URL")
     source.add_argument("-f", "--file", type=Path, help="Path to a local media file")
     parser.add_argument(
-        "--lang",
-        choices=SUPPORTED_LANGS,
-        required=True,
-        help="Audio language (en, zh, or ja)",
-    )
-    parser.add_argument(
         "-o",
         "--output-dir",
         type=Path,
@@ -108,6 +139,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.file and not args.file.is_file():
         parser.error(f"file not found: {args.file}")
 
+    # Pick language interactively *before* clearing the cache and downloading,
+    # so an aborted prompt doesn't waste work.
+    language = prompt_language()
+
     reset_cache_dir()
 
     if args.url:
@@ -119,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
         )
     else:
         media_path = args.file
-    srt_path, txt_path = transcribe(media_path, args.lang, args.model, args.output_dir)
+    srt_path, txt_path = transcribe(media_path, language, args.model, args.output_dir)
     print(f"==> Wrote {srt_path}")
     print(f"==> Wrote {txt_path}")
     return 0
