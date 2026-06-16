@@ -120,8 +120,8 @@ def main(argv: list[str] | None = None) -> int:
         "-o",
         "--output-dir",
         type=Path,
-        default=Path.cwd(),
-        help="Directory to save the .srt and .txt into (default: current working directory)",
+        default=None,
+        help="Directory to save .srt and .txt (default: same folder as the video file, or CWD for URLs)",
     )
     parser.add_argument(
         "--model",
@@ -154,7 +154,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     else:
         media_path = args.file
-    srt_path, txt_path = transcribe(media_path, language, args.model, args.output_dir)
+    output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
+    srt_path, txt_path = transcribe(media_path, language, args.model, output_dir)
     print(f"==> Wrote {srt_path}")
     print(f"==> Wrote {txt_path}")
     return 0

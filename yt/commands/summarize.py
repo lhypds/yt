@@ -56,8 +56,8 @@ def main(argv: list[str] | None = None) -> int:
         "-o",
         "--output-dir",
         type=Path,
-        default=Path.cwd(),
-        help="Directory to save .txt, .srt, and .summary.md into (default: current working directory)",
+        default=None,
+        help="Directory to save .txt, .srt, and .summary.md (default: same folder as the video file, or CWD for URLs)",
     )
     parser.add_argument(
         "--whisper-model",
@@ -103,7 +103,8 @@ def main(argv: list[str] | None = None) -> int:
     reset_cache_dir()
 
     if preloaded_transcript is not None:
-        txt_path = args.output_dir / f"{preloaded_stem}.txt"
+        output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
+        txt_path = output_dir / f"{preloaded_stem}.txt"
         txt_path.parent.mkdir(parents=True, exist_ok=True)
         txt_path.write_text(preloaded_transcript, encoding="utf-8")
     else:
@@ -116,8 +117,9 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             media_path = args.file
+        output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
         _, txt_path = transcribe(
-            media_path, language, args.whisper_model, args.output_dir
+            media_path, language, args.whisper_model, output_dir
         )
 
     transcript_text = txt_path.read_text(encoding="utf-8").strip()
@@ -128,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"==> Summarizing {txt_path.name} with {args.openai_model}")
     summary = summarize_text(transcript_text, args.openai_model)
 
-    summary_path = args.output_dir / f"{txt_path.stem}.summary.md"
+    summary_path = output_dir / f"{txt_path.stem}.summary.md"
     summary_path.write_text(summary + "\n", encoding="utf-8")
     print(f"==> Wrote {summary_path}")
     print()
