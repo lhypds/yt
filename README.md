@@ -3,7 +3,8 @@ yt
 ==
 
 
-Some tools for processing Youtube videos.  
+Tools for transcribing and summarizing videos.  
+Initially designed for Youtube videos, but should work with any video file.  
 
 
 Setup
@@ -28,6 +29,7 @@ transcript
 Get transcript from a Youtube video. You'll be prompted to pick a language (en, zh, ja).  
 `yt transcript -u [URL]` - Get the transcript of a video from Youtube.  
 `yt transcript -f [FILE]` - Get the transcript of a video file.  
+This will generate a `.srt` subtitle file and a `.txt` transcript file in the video's directory.  
 
 summarize  
 Summarize a Youtube video by transcribing it and asking OpenAI for the main points.  
