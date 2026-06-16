@@ -120,8 +120,8 @@ def main(argv: list[str] | None = None) -> int:
         "-o",
         "--output-dir",
         type=Path,
-        default=CACHE_DIR,
-        help=f"Directory to save the video and SRT into (default: {CACHE_DIR})",
+        default=Path.cwd(),
+        help="Directory to save the .srt and .txt into (default: current working directory)",
     )
     parser.add_argument(
         "--model",
@@ -148,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.url:
         media_path = download(
             args.url,
-            args.output_dir,
+            CACHE_DIR,
             audio_only=False,
             cookies_from_browser=args.cookies_from_browser,
         )

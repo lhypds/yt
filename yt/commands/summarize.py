@@ -56,8 +56,8 @@ def main(argv: list[str] | None = None) -> int:
         "-o",
         "--output-dir",
         type=Path,
-        default=CACHE_DIR,
-        help=f"Directory to save downloads and outputs into (default: {CACHE_DIR})",
+        default=Path.cwd(),
+        help="Directory to save .txt, .srt, and .summary.md into (default: current working directory)",
     )
     parser.add_argument(
         "--whisper-model",
@@ -110,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.url:
             media_path = download(
                 args.url,
-                args.output_dir,
+                CACHE_DIR,
                 audio_only=False,
                 cookies_from_browser=args.cookies_from_browser,
             )
