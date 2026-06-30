@@ -11,7 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from ..utils.cacheUtils import CACHE_DIR, reset_cache_dir
+from ..utils.cacheUtils import reset_cache_dir
 from .download import download
 from .transcript import prompt_language, transcribe
 
@@ -111,7 +111,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.url:
             media_path = download(
                 args.url,
-                CACHE_DIR,
+                args.output_dir or Path.cwd(),
                 audio_only=False,
                 cookies_from_browser=args.cookies_from_browser,
             )
