@@ -37,6 +37,15 @@ source "$VENV_DIR/bin/activate"
 echo "==> Upgrading pip"
 pip install --upgrade pip
 
+if [ -f ".env.example" ]; then
+    if [ ! -f ".env" ]; then
+        cp ".env.example" ".env"
+        echo "==> Created .env from .env.example"
+    else
+        echo "==> Keeping existing .env"
+    fi
+fi
+
 if ! command -v ffmpeg >/dev/null 2>&1; then
     cat >&2 <<'EOF'
 
