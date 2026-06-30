@@ -108,16 +108,22 @@ def main(argv: list[str] | None = None) -> int:
         txt_path.parent.mkdir(parents=True, exist_ok=True)
         txt_path.write_text(preloaded_transcript, encoding="utf-8")
     else:
+        base_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
         if args.url:
             media_path = download(
                 args.url,
-                args.output_dir or Path.cwd(),
+                base_dir,
                 audio_only=False,
                 cookies_from_browser=args.cookies_from_browser,
             )
+            output_dir = base_dir / media_path.stem
+            output_dir.mkdir(parents=True, exist_ok=True)
+            new_media_path = output_dir / media_path.name
+            media_path.rename(new_media_path)
+            media_path = new_media_path
         else:
             media_path = args.file
-        output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
+            output_dir = base_dir
         _, txt_path = transcribe(
             media_path, language, args.whisper_model, output_dir
         )

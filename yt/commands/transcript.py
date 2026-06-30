@@ -73,7 +73,7 @@ def transcribe(
     media_path: Path,
     language: str,
     model_size: str,
-    output_dir: Path = CACHE_DIR,
+    output_dir: Path,
 ) -> tuple[Path, Path]:
     print(f"==> Loading whisper model '{model_size}' (first run downloads ~hundreds of MB)")
     model = WhisperModel(model_size, device="cpu", compute_type="int8")
@@ -145,16 +145,22 @@ def main(argv: list[str] | None = None) -> int:
 
     reset_cache_dir()
 
-    output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
+    base_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
     if args.url:
         media_path = download(
             args.url,
-            output_dir,
+            base_dir,
             audio_only=False,
             cookies_from_browser=args.cookies_from_browser,
         )
+        output_dir = base_dir / media_path.stem
+        output_dir.mkdir(parents=True, exist_ok=True)
+        new_media_path = output_dir / media_path.name
+        media_path.rename(new_media_path)
+        media_path = new_media_path
     else:
         media_path = args.file
+        output_dir = base_dir
     srt_path, txt_path = transcribe(media_path, language, args.model, output_dir)
     print(f"==> Wrote {srt_path}")
     print(f"==> Wrote {txt_path}")
