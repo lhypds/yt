@@ -13,7 +13,7 @@ from pathlib import Path
 from faster_whisper import WhisperModel
 from tqdm import tqdm
 
-from ..utils.cacheUtils import CACHE_DIR, reset_cache_dir
+from ..utils.cacheUtils import reset_cache_dir
 from .download import download
 
 SUPPORTED_LANGS = ("en", "zh", "ja")
@@ -145,16 +145,16 @@ def main(argv: list[str] | None = None) -> int:
 
     reset_cache_dir()
 
+    output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
     if args.url:
         media_path = download(
             args.url,
-            CACHE_DIR,
+            output_dir,
             audio_only=False,
             cookies_from_browser=args.cookies_from_browser,
         )
     else:
         media_path = args.file
-    output_dir = args.output_dir or (args.file.parent if args.file else Path.cwd())
     srt_path, txt_path = transcribe(media_path, language, args.model, output_dir)
     print(f"==> Wrote {srt_path}")
     print(f"==> Wrote {txt_path}")
