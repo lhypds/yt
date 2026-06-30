@@ -47,14 +47,21 @@ if [ -f ".env.example" ]; then
 fi
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
-    cat >&2 <<'EOF'
+    if command -v brew >/dev/null 2>&1; then
+        echo "==> Installing ffmpeg via Homebrew"
+        brew install ffmpeg
+    elif command -v apt-get >/dev/null 2>&1; then
+        echo "==> Installing ffmpeg via apt"
+        sudo apt-get install -y ffmpeg
+    else
+        cat >&2 <<'EOF'
 
-warning: ffmpeg was not found on PATH.
-  yt-dlp needs ffmpeg to merge best-quality video+audio streams and to
-  extract audio (--audio-only). Install it with:
-    macOS:        brew install ffmpeg
+warning: ffmpeg was not found on PATH and no supported package manager detected.
+  Install it manually:
+    macOS:         brew install ffmpeg
     Debian/Ubuntu: sudo apt install ffmpeg
 EOF
+    fi
 fi
 
 cat <<EOF
